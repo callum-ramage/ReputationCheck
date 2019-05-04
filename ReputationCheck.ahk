@@ -8,48 +8,77 @@ windowDisplayed := false
 
 #IfWinActive ahk_exe PathOfExile.*.exe
 
-#IfWinActive
-
 ^r::
     if (windowDisplayed) {
         Gui, Destroy
         windowDisplayed := false
     } else {
-        ; Send, {ShiftDown}{Home}{ShiftUp}
-        ; Send, {CtrlDown}c{CtrlUp}
-        ; Send, {Esc}
-        CreateWindow("Win + 7")
-        windowDisplayed := true
+        clipboard = 
+        Send, +{Home}
+        Send, ^c
+        Send, {End}
+        ClipWait
+        characterName := clipboard
+        ; Trim @ character
+        StringGetPos, startCharacterNamePos, characterName , @
+        if (startCharacterNamePos == 0) {
+            StringTrimLeft, characterName, characterName, 1
+        }
+        StringGetPos, endCharacterNamePos, characterName , %A_Space%
+        if (endCharacterNamePos > 0) {
+            StringLeft, characterName, characterName, endCharacterNamePos
+        }
+        ; Get the current datetime
+        FormatTime, CurrentDateTime,, yyyyMMddHHmmss
+        ; Make a request to the Reputation API
+        RequestData(characterName)
+        ; Make sure the response is new
+        dateOk := CheckDate(characterName, CurrentDateTime)
+        WinGet, ActiveId, ID, A
+        if dateOk {
+            FileRead, Contents, repChecks/%characterName%.txt
+            if not ErrorLevel  ; Successfully loaded.
+            {
+                CreateWindow(Contents)
+                windowDisplayed := true
+            } else {
+                CreateWindow("An error occurred opening the characters review")
+                windowDisplayed := true
+            }
+        } else {
+            CreateWindow("Failed to get character reviews")
+            windowDisplayed := true
+        }
+        ; Focus game window
+        WinActivate, ahk_id %ActiveId%
     }
 return
 
-CreateWindow(key){
-    GetTextSize(key,35,Verdana,height,width)
-    bgTopPadding = 40
-    bgWidthPadding = 100
-    bgHeight := height + bgTopPadding
-    bgWidth := width + bgWidthPadding
-    padding = 20
-    MouseGetPos , xPlacement, yPlacement
-    ; yPlacement := (1*A_ScreenHeight) – bgHeight – padding
-    ; xPlacement := (1*A_ScreenWidth) – bgWidth – padding
+#IfWinActive
 
-    Gui, Color, 46bfec
-    Gui, Margin, 0, 0
-    ; Gui, Add, Picture, x0 y0 w%bgWidth% h%bgHeight%, C:\Users\IrisDaniela\Pictures\bg.png
-    Gui, +LastFound +AlwaysOnTop -Border -SysMenu +Owner -Caption +ToolWindow
-    Gui, Font, s35 cWhite, Verdana
-    ; Gui, Add, Text, xm y20 x25 ,%key%
-    Gui, Add, Text,, % key " y" yPlacement " x" xPlacement " " A_ScreenHeight " " bgHeight " " bgWidth
-    Gui, Show, x%xPlacement% y%yPlacement%
-    ; Gui, Show
+RequestData(characterName) {
+    RunWait, characterCheck.exe %characterName%, Hide
 }
 
-GetTextSize(str, size, font,ByRef height,ByRef width) {
-    Gui temp: Font, s%size%, %font%
-    Gui temp:Add, Text, , %str%
-    GuiControlGet T, temp:Pos, Static1
-    Gui temp:Destroy
-    height = % TH
-    width = % TW
+CheckDate(characterName, currentDate) {
+    FileGetTime, modtime , repChecks/%characterName%.txt, M
+    FormatTime, mytime , %modtime%, yyyyMMddHHmmss
+    return ((mytime - currentDate) >= 0)
+}
+
+CreateWindow(key){
+    width = W300
+    MouseGetPos , xPlacement, yPlacement
+
+    Gui, Color, 1b1b1b
+    Gui, Margin, 0, 0
+    Gui, +LastFound +AlwaysOnTop -Border -SysMenu +Owner -Caption +ToolWindow
+    Gui, Font, s10 cWhite, Consolas
+    ; Gui, Add, Text, xm y20 x25 ,%key%
+    ; Gui, Add, Text, xm y20 x25, % key " y" yPlacement " x" xPlacement " " A_ScreenHeight " " bgHeight " " bgWidth
+    Gui, Add, Text, %width%, % key
+    GuiControlGet T, Pos, Static1
+    xPlacement := xPlacement - (TW / 2)
+    ; yPlacement := yPlacement - (TH / 2)
+    Gui, Show, x%xPlacement% y%yPlacement% %width%
 }
