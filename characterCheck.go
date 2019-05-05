@@ -66,15 +66,18 @@ func main() {
 				}
 				outputContent += fmt.Sprintf("Account Name:        %s\n", account.AccountName)
 				outputContent += fmt.Sprintf("Character Name:      %s\n", account.Characters[0])
+				outputContent += fmt.Sprintf("Net Reputaiton:      %d\n", account.Reputation["Good"].Count-account.Reputation["Bad"].Count)
 				outputContent += fmt.Sprintf("Positive Reputaiton: %d\n", account.Reputation["Good"].Count)
 				for i, review := range account.Reputation["Good"].Reviews {
 					outputContent += fmt.Sprintf("\t%d) %s\n", i, review)
 				}
 				outputContent += fmt.Sprintf("Negative Reputaiton: %d\n", account.Reputation["Bad"].Count)
 				for i, review := range account.Reputation["Bad"].Reviews {
-					outputContent += fmt.Sprintf("\t%d) %s\n", i, review)
+					outputContent += fmt.Sprintf("\t%d) %s", i, review)
+					if i < len(account.Reputation["Bad"].Reviews) {
+						outputContent += fmt.Sprintf("\n")
+					}
 				}
-				outputContent += fmt.Sprintf("Net Reputaiton:      %d", account.Reputation["Good"].Count-account.Reputation["Bad"].Count)
 			}
 		}
 
