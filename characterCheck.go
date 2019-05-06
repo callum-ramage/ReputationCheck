@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 )
 
 // APIResponse is the structure returned by the Reputation end point
@@ -19,11 +20,13 @@ type APIResponse struct {
 
 // Account is the structure defining an account
 type Account struct {
-	AccountName string
-	Characters  []string
-	Guild       string
-	GuildID     string
-	Reputation  map[string]Reputation
+	AccountName     string
+	Characters      []string
+	Guild           string
+	GuildID         string
+	SponsorMessage  string
+	CommunityFigure bool
+	Reputation      map[string]Reputation
 }
 
 // Reputation represents an accumulation of reviews
@@ -66,6 +69,15 @@ func main() {
 				}
 				outputContent += fmt.Sprintf("Account Name:        %s\n", account.AccountName)
 				outputContent += fmt.Sprintf("Character Name:      %s\n", account.Characters[0])
+				if account.SponsorMessage != "" {
+					lines := strings.Split(account.SponsorMessage, "\\n")
+					for _, line := range lines {
+						outputContent += fmt.Sprintf("%s\n", line)
+					}
+				}
+				if account.CommunityFigure {
+					outputContent += fmt.Sprintf("This account has a level of fame within the POE community that means their reviews might not be true.\n")
+				}
 				outputContent += fmt.Sprintf("Net Reputaiton:      %d\n", account.Reputation["Good"].Count-account.Reputation["Bad"].Count)
 				outputContent += fmt.Sprintf("Positive Reputaiton: %d\n", account.Reputation["Good"].Count)
 				for i, review := range account.Reputation["Good"].Reviews {
