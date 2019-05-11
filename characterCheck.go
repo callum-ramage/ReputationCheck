@@ -38,7 +38,7 @@ type Reputation struct {
 func main() {
 	argsWithProg := os.Args
 	if len(argsWithProg) > 1 {
-		resp, err := http.Get("http://rep.poeledger.com/Reputation?varsion=1&characters=" + argsWithProg[1])
+		resp, err := http.Get("https://rep.poeledger.com/Reputation?varsion=1&characters=" + argsWithProg[1])
 		if err != nil {
 			fmt.Println(err)
 			return
